@@ -114,11 +114,9 @@ func main() {
 	start := time.Now()
 
 	filepath.Walk(*root, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			if matcher.MatchString(path) {
-				wg.Add(1)
-				input <- path
-			}
+		if matcher.MatchString(path) {
+			wg.Add(1)
+			input <- path
 		}
 
 		return nil
