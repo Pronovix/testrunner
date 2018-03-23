@@ -54,8 +54,13 @@ func worker(path, output chan string, wg *sync.WaitGroup) {
 func run(path string, wg *sync.WaitGroup) string {
 	defer wg.Done()
 
+	localParts := make([]string, len(parts))
+	for i, part := range parts {
+		localParts[i] = part
+	}
+
 	start := time.Now()
-	cmdparts := append(parts[:], path)
+	cmdparts := append(localParts, path)
 
 	cmd := exec.Cmd{
 		Path: parts[0],
