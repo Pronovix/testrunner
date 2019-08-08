@@ -1,4 +1,4 @@
-// Copyright 2018 Pronovix
+// Copyright 2019 Pronovix
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -28,7 +29,7 @@ import (
 )
 
 var (
-	root    = flag.String("root", ".", "the directory where the tests are")
+	root    = flag.String("root", ".", "the directory where the tests are; pass - to skip")
 	command = flag.String("command", "", "command to run")
 	pattern = flag.String("pattern", "Test.php$", "pattern to match test files")
 	threads = flag.Int("threads", runtime.NumCPU(), "number of threads")
@@ -100,7 +101,7 @@ func printer(str chan string) {
 
 func maybeLog(msg string) {
 	if *verbose {
-		fmt.Fprintln(os.Stderr, msg)
+		_, _ = fmt.Fprintln(os.Stderr, msg)
 	}
 }
 
@@ -135,18 +136,33 @@ func main() {
 	start := time.Now()
 	files := make(map[string]struct{})
 
-	filepath.Walk(*root, func(path string, info os.FileInfo, err error) error {
-		if matcher.MatchString(path) {
-			if _, found := files[path]; !found {
-				wg.Add(1)
-				maybeLog("Adding file " + path)
-				files[path] = struct{}{}
-				input <- path
+	processFile := func(path string) {
+		wg.Add(1)
+		maybeLog("Adding file " + path)
+		input <- path
+	}
+
+	if *root != "-" {
+		_ = filepath.Walk(*root, func(path string, info os.FileInfo, err error) error {
+			if matcher.MatchString(path) {
+				if _, found := files[path]; !found {
+					files[path] = struct{}{}
+					processFile(path)
+				}
+			}
+
+			return nil
+		})
+	}
+
+	if stat, _ := os.Stdin.Stat(); (stat.Mode() & os.ModeCharDevice) == 0 {
+		data, _ := ioutil.ReadAll(os.Stdin)
+		for _, fn := range strings.Split(string(data), "\x00") {
+			if fn != "" {
+				processFile(fn)
 			}
 		}
-
-		return nil
-	})
+	}
 
 	wg.Wait()
 	close(input)
