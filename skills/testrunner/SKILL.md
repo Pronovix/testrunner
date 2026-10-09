@@ -67,13 +67,11 @@ git diff --name-only origin/main... | grep 'Test\.php$' | tr '\n' '\0' | $testru
 find web/modules/custom/<module>/tests -name '*Test.php' -print0 | $testrunner_bin -command "$phpunit_bin -c web/core" -root -
 ```
 
-## 4. Concurrency Bounds
+## 4. Concurrency and Batching Rules
 
-Tune worker threads (`-threads <N>`) to the architectural test layer:
-
-- **Unit tests**: Pure logic decoupled from database and services. Maximize concurrency (`-threads 16` or default CPU count).
-- **Kernel tests**: Spawns isolated database table prefixes. Limit to `-threads 4` to `-threads 8` to avoid MariaDB connection limits.
-- **Functional / FunctionalJavascript**: Real browser sessions. Keep low (`-threads 2` to `-threads 4`) or run single-file if Mink / WebDriver session clashes appear.
+- **Run all test layers together in a single batch**: Drupal tests (Unit, Kernel, Functional) are completely isolated from each other via randomized database table prefixes (`test<id>_`). Do not partition or group tests by type into sequential runs. Pass all relevant test files into a single `testrunner` invocation so fast tests finish immediately while slower tests run concurrently in parallel workers.
+- **Default thread count**: Omit `-threads` to use `testrunner`'s default (all available CPU cores).
+- **Throttle only on resource pressure**: Only constrain `-threads` (e.g. `-threads 4` to `8`) if running dozens of tests at once and encountering database connection limits or memory constraints, or when executing `FunctionalJavascript` tests against a concurrency-limited WebDriver grid.
 
 ## 5. Completion Criteria & Diagnosis
 
