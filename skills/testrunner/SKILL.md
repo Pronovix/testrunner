@@ -1,6 +1,6 @@
 ---
 name: testrunner
-description: Run PHPUnit tests in parallel with testrunner. Use when executing multiple test files, verifying test suites across modules, or batching changed test files.
+description: Execute PHPUnit test suites, test directories, or multiple test files concurrently. Use when running a module's test suite, running tests under a directory path, or verifying regression across changed test files.
 ---
 
 Execute PHPUnit test suites concurrently using the `testrunner` Go binary (Pronovix testrunner v0.5).
