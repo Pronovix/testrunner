@@ -1,6 +1,6 @@
 ---
 name: testrunner
-description: Parallel PHPUnit test runner. Primary tool for running multiple tests, test directories, module suites, or regression batches concurrently. Use for all non-single-file test execution.
+description: Parallel PHPUnit test runner and binary provisioner. Primary tool for all directory, suite, and batch test execution, including dynamic binary download and PATH resolution when missing.
 ---
 
 Execute PHPUnit test suites concurrently using the `testrunner` Go binary (Pronovix testrunner v0.5).
